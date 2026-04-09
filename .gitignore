@@ -1,0 +1,16 @@
+# Environnement Python
+venv/
+*.pyc
+__pycache__/
+
+# dbt
+logs/
+target/
+profiles.yml
+
+# Airflow
+logs/
+plugins/
+
+# Docker
+.env
