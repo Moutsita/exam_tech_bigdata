@@ -1,0 +1,8 @@
+USE DATABASE BOOKSHOP;
+USE SCHEMA RAW;
+
+SELECT * FROM category;
+SELECT * FROM customers;
+SELECT * FROM factures;
+SELECT * FROM books;
+SELECT * FROM ventes;
