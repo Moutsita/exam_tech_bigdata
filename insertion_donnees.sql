@@ -1,20 +1,16 @@
 /* -----------------------------------------------------------------------
 ------------- INSERTION DES DONNEES DANS LES TABLES DE RAW --------------
- ----------------------------------------------------------------------- */
+ -----------------------------------------------------------------------*/
 
-/* Script exécutable pour Snowflake */
-
- -- Accès à la BD
- USE DATABASE BOOKSHOP;
-
--- Accès au schéma RAW
- USE SCHEMA RAW;
-
+-- Accès à la BD et au schéma
+USE DATABASE BOOKSHOP;
+USE SCHEMA RAW;
 
 /* -------------------------------------------------
----------------- Table N°1 : Cateogry ----------
--------------------------------------------------- */
+---------------- Table N°1 : Category ----------
+--------------------------------------------------*/
 
+-- On retire "id" pour laisser l'AUTOINCREMENT de Snowflake travailler
 INSERT INTO category (intitule, created_at) VALUES
 ('Roman', CURRENT_TIMESTAMP),
 ('Science-Fiction', CURRENT_TIMESTAMP),
@@ -52,7 +48,7 @@ INSERT INTO category (intitule, created_at) VALUES
 
 /* -------------------------------------------------
 ---------------- Table N°2 : Books ----------
--------------------------------------------------- */
+--------------------------------------------------*/
 
 INSERT INTO books (category_id, code, intitule, isbn_10, isbn_13, created_at) VALUES
 (8, 'BK001', 'Le Petit Prince', '1234567890', '9781234567890', CURRENT_TIMESTAMP),
@@ -93,7 +89,7 @@ INSERT INTO books (category_id, code, intitule, isbn_10, isbn_13, created_at) VA
 
 /* -------------------------------------------------
 ---------------- Table N°3 : Customers ----------
--------------------------------------------------- */
+--------------------------------------------------*/
 
 INSERT INTO customers (code, first_name, last_name, created_at) VALUES
 ('C001', 'Jean', 'Dupont', CURRENT_TIMESTAMP),
@@ -134,7 +130,7 @@ INSERT INTO customers (code, first_name, last_name, created_at) VALUES
 
 /* -------------------------------------------------
 ---------------- Table 4 : Factures ----------
--------------------------------------------------- */
+--------------------------------------------------*/
 
 INSERT INTO factures (code, date_edit, customers_id, qte_totale, total_amount, total_paid, created_at) VALUES
 ('F001', '2025-03-01', 1, 2, 21000, 21000, CURRENT_TIMESTAMP),
@@ -165,10 +161,9 @@ INSERT INTO factures (code, date_edit, customers_id, qte_totale, total_amount, t
 
 /* -------------------------------------------------
 ---------------- Table N°5 : Ventes ----------
--------------------------------------------------- */
+--------------------------------------------------*/
 
 INSERT INTO ventes (code, date_edit, factures_id, books_id, pu, qte, created_at) VALUES
--- Prix en CFA
 ('V001', '2025-03-01', 1, 1, 10500, 2, CURRENT_TIMESTAMP),
 ('V002', '2025-03-02', 2, 2, 16500, 1, CURRENT_TIMESTAMP),
 ('V003', '2025-03-03', 3, 3, 7800, 3, CURRENT_TIMESTAMP),
@@ -194,4 +189,3 @@ INSERT INTO ventes (code, date_edit, factures_id, books_id, pu, qte, created_at)
 ('V033', '2025-03-08', 8, 8, 5500, 1, CURRENT_TIMESTAMP),
 ('V034', '2025-03-09', 9, 9, 6000, 1, CURRENT_TIMESTAMP),
 ('V035', '2025-03-10', 10, 10, 7500, 1, CURRENT_TIMESTAMP);
-
