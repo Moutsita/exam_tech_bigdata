@@ -1,0 +1,24 @@
+services:
+  # Base de données source (Postgres)
+  postgres_source:
+    image: postgres:17
+    container_name: postgres_bookshop
+    environment:
+      POSTGRES_DB: bookshop_local
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+
+  # Airflow
+  airflow:
+    image: apache/airflow:latest
+    container_name: airflow_exam
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./dbt:/opt/airflow/dbt
+    ports:
+      - "8080:8080"
