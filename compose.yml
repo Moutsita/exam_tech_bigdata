@@ -1,5 +1,5 @@
 services:
-  # Base de données source (Postgres)
+  # 1. Base de données SOURCE pour le projet (Postgres 17)
   postgres_source:
     image: postgres:17
     container_name: postgres_bookshop
@@ -9,16 +9,31 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    volumes:
+      - ./init_db:/docker-entrypoint-initdb.d # Pour charger vos scripts auto au démarrage
 
-  # Airflow
+  # 2. Base de données pour les méta-données d'AIRFLOW
+  postgres_airflow:
+    image: postgres:15
+    container_name: postgres_airflow
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+
+  # 3. AIRFLOW (Webserver + Scheduler)
   airflow:
     image: apache/airflow:latest
     container_name: airflow_exam
+    depends_on:
+      - postgres_airflow
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
+      - AIRFLOW__WWW__DEFAULT_UI_TIMEZONE=Africa/Dakar
     volumes:
       - ./dags:/opt/airflow/dags
       - ./dbt:/opt/airflow/dbt
     ports:
       - "8080:8080"
+    command: standalone
