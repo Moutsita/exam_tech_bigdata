@@ -18,9 +18,9 @@ def transfer_table(table_name):
 
     # 2. Connexion Snowflake
     conn = snowflake.connector.connect(
-        user='Moutsita',
-        password='RovMoutsita@93',
-        account='cy02594.af-south-1.aws',
+        user='Username',
+        password='votre_password_snowflake',
+        account='id.region.cloud',
         warehouse='COMPUTE_WH',
         database='BOOKSHOP',
         schema='RAW'
