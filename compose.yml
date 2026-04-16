@@ -4,9 +4,10 @@ services:
     image: postgres:17
     container_name: postgres_bookshop
     environment:
-      POSTGRES_DB: bookshop_local
+      POSTGRES_DB: bookshop
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+    restart: always
     ports:
       - "5432:5432"
     volumes:
