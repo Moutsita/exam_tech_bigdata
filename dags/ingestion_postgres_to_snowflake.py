@@ -20,7 +20,7 @@ def transfer_table(table_name):
     conn = snowflake.connector.connect(
         user='Moutsita',
         password='RovMoutsita@93',
-        account='af-south-1.aws/cy02594',
+        account='cy02594.af-south-1.aws',
         warehouse='COMPUTE_WH',
         database='BOOKSHOP',
         schema='RAW'
