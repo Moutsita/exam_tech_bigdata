@@ -1,0 +1,86 @@
+# -- models/staging/schema.yml --
+
+version: 2
+models:
+# -- ventes --
+- name: stg_ventes
+  description: "Table des ventes"
+  columns:
+  - name: id
+    description: "Clé primaire de la table des ventes"
+    tests:
+    - not_null
+    - unique
+  - name: date_edit
+  - name: factures_id
+    description: "Clé étrangère référence id de factures"
+    tests:
+    - not_null
+  - name: books_id
+    description: "Clé étrangère reférence id de books"
+    tests:
+    - not_null
+  - name: pu
+  - name: qte
+  - name: created_at
+# -- factures --
+- name: stg_factures
+  description: "Table des factures"
+  columns:
+  - name: id
+    description: "Clé primaire"
+    tests:
+    - not_null
+    - unique
+  - name: code
+  - name: date_edit
+  - name: customers_id
+    description: "Clé étrangère référence id de customers"
+    tests:
+    - not_null
+  - name: qte_totale
+  - name: total_amount
+  - name: total_paid
+  - name: created_at
+# -- Customers --
+- name: stg_customers
+  description: "Table des clients"
+  columns:
+  - name: id
+    description: "Clé primaire de la table"
+    tests:
+    - unique
+    - not null
+  - name: code
+  - name: first_name
+  - name: last_name
+  - name: created_at
+# -- Books --
+- name: stg_books
+  description: "Table des livres"
+  columns:
+  - name: id
+    description: "Clé primaire"
+    tests:
+    - unique
+    - not_null
+  - name: category_id
+    description: "Clé étrangère référence id de la table category"
+    tests:
+    - not_null
+  - name: code
+  - name: intitule
+  - name: isbn_10
+  - name: isbn_13
+  - name: created_at
+# -- category
+- name: stg_category
+  description: "Table category"
+  columns:
+  - name: id
+    description: "Clé primaire"
+    tests:
+    - not_null
+    - unique
+  - name: intitule
+  - name: created_at

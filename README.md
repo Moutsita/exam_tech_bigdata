@@ -1,34 +1,50 @@
-### Clonage du dépôt en ligne
+### 1. Clonage du dépôt en ligne
 ``` bash
 git clone https://github.com/Moutsita/exam_tech_bigdata.git
 ```
 
-### Récupération des mises à jour sur la branche principale
+### 2. Récupération des mises à jour sur la branche principale
 ``` bash
 git pull origin main
 ```
 
-### Lancement du programme
+### 3. Lancement du programme
 ``` bash
 docker-compose up -d --build
 ```
 
-### Arrêt du programme
+### 4. Arrêt du programme
 ``` bash
 docker-compose down
 ```
 
-### Accéder au password de Airflow
+### 5. Accéder au password de Airflow
 ``` bash
 docker logs airflow_exam | Select-String "login"
 ```
 
-### Initialistion de dbt et cr&ation des dépôts
+### 6. Initialistion de dbt et cr&ation des dépôts
 ``` bash
 docker exec -it airflow_exam bash -c "cd /opt/airflow/dbt && dbt init exam_tech_bigdata"
 ```
+En tapant cette commande ci-dessus, il vous demandera de faire les configurations nécessaires pour communiquer avec snowflake
+Verification du fonctionnement de "dbt"
+```bash
+docker exec -it airflow_exam bash
 
-### Configuration du fichier ingestion_postres_to_snowflake
+cd /opt/airflow/dbt/exam_tech_bigdata
+
+dbt debug
+```
+NB: Il renverra un message :
+```bash
+ "All checks passed !"
+```
+Celle ci permet de vérifier si la configuration est OK
+Le fichier profiles.yml est uniquement généré dans le container, pour des raisons de sécurité.
+
+
+### 7. Configuration du fichier ingestion_postres_to_snowflake
 Remplacer les données du connecteur snowflake par celle du profiles.yml
 
 NB : Attention, pour account la syntaxe est : 
@@ -36,7 +52,7 @@ NB : Attention, pour account la syntaxe est :
 <identifiant>.<region>.<cloud>
 ```
 
-### Configuration de Airflow en localhost:<port>
+### 8. Configuration de Airflow en localhost:<port>
 Ici notre port de communication du container est 8080; Voici les configurations une fois à l'intérieur :
 - Clique sur Admin ensuite connections
 - Recherche postgres_default et insère les valeurs suivantes (elles sont relatives à notre container) :
@@ -52,4 +68,17 @@ Ici notre port de communication du container est 8080; Voici les configurations 
 ```
 - Vous pouvez à présent lancer le dag d'ingestion
 
-### A suivre ()
+### 9. Vérification du fonctionnement de dbt
+a. Créer les dossier manquant dans le container
+
+```bash
+docker exec -u root airflow_exam mkdir -p /home/airflow/.dbt
+```
+b. Déplacer le fichier au bon endroit
+```bash
+docker exec -u root airflow_exam mv /opt/airflow/dbt/profiles.yml /home/airflow/.dbt/profiles.yml
+
+docker exec -u root airflow_exam chown airflow:airflow /home/airflow/.dbt/profiles.yml
+```
+
+### 10. 

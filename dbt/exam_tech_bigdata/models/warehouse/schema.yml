@@ -1,0 +1,174 @@
+# -- models/warehouse/schema.yml --
+version: 2
+models:
+  # -- dim_books --
+  - name: dim_books
+    description: "Copie de stg_books"
+    columns:
+    - name: id
+      description: "Clé primaire"
+      tests:
+      - unique
+      - not null
+    - name: category_id
+      description: "Clé étrangère référence id de la table category"
+      tests:
+      - not null
+    - name: code
+    - name: intitule
+    - name: isbn_10
+    - name: isbn_13
+    - name: created_at
+  # -- dim_category --
+  - name: dim_category
+    description: "Copie de stg_category"
+    columns:
+    - name: id
+      description: "Clé primaire"
+      tests:
+      - not null
+      - unique
+    - name: intitule
+    - name: created_at
+  # -- dim_customers --
+  - name: dim_customers
+    description: "Copie de stg_customers avec ajout de la colonne nom"
+    columns:
+    - name: id
+      description: "Clé primaire de la table"
+      tests:
+      - unique
+      - not null
+    - name: code
+    - name: first_name
+    - name: last_name
+    - name: created_at
+    - name: nom
+      type: VARCHAR
+  # -- fact_books_annees --
+  - name: fact_books_annees
+    description: "Liste des livres vendues par année"
+    columns:
+    - name: id
+      description: "Clé primaire de la table des ventes"
+      tests:
+      - not null
+      - unique
+    # - name: date_edit
+    - name: factures_id
+      description: "Clé étrangère référence id de factures"
+      tests:
+      - not null
+    - name: books_id
+      description: "Clé étrangère reférence id de books"
+      tests:
+      - not null
+    - name: pu
+    - name: qte
+    - name: created_at
+    - name: annees
+      type: INT
+  # -- fact_books_jour --
+  - name: fact_books_jour
+    description: "Liste des livres vendues par jour"
+    columns:
+    - name: id
+      description: "Clé primaire de la table des ventes"
+      tests:
+      - not null
+      - unique
+    # - name: date_edit
+    - name: factures_id
+      description: "Clé étrangère référence id de factures"
+      tests:
+      - not null
+    - name: books_id
+      description: "Clé étrangère reférence id de books"
+      tests:
+      - not null
+    - name: pu
+    - name: qte
+    - name: created_at
+    - name: jour
+      type: VARCHAR 
+  # -- fact_books_mois --
+  - name: fact_books_mois
+    description: "Liste des livres vendues par mois"
+    columns:
+    - name: id
+      description: "Clé primaire de la table des ventes"
+      tests:
+      - not null
+      - unique
+    # - name: date_edit
+    - name: factures_id
+      description: "Clé étrangère référence id de factures"
+      tests:
+      - not null
+    - name: books_id
+      description: "Clé étrangère reférence id de books"
+      tests:
+      - not null
+    - name: pu
+    - name: qte
+    - name: created_at
+    - name: mois
+      type: VARCHAR 
+  # -- fact_factures --
+  - name: fact_factures
+    description: "Copie de stg_factures avec des colonnes année, mois et jour"
+    columns:
+    - name: id
+      description: "Clé primaire"
+      tests:
+      - not null
+      - unique
+    - name: code
+    - name: date_edit
+    - name: customers_id
+      description: "Clé étrangère référence id de customers"
+      tests:
+      - not null
+    - name: qte_totale
+    - name: total_amount
+    - name: total_paid
+    - name: created_at
+    - name: annees
+      description: "Année de la vente"
+      type: INT
+    - name: mois
+      description: "Mois de la vente, en lettres"
+      type: VARCHAR
+    - name: jour
+      description: "Jour du mois en cours, en lettres"
+      type: VARCHAR
+  # -- fact_ventes --
+  - name: fact_ventes
+    description: ""
+    columns:
+    - name: id
+      description: "Clé primaire de la table des ventes"
+      tests:
+      - not null
+      - unique
+    - name: date_edit
+    - name: factures_id
+      description: "Clé étrangère référence id de factures"
+      tests:
+      - not null
+    - name: books_id
+      description: "Clé étrangère reférence id de books"
+      tests:
+      - not null
+    - name: pu
+    - name: qte
+    - name: created_at
+    - name: annees
+      description: "Année de la vente"
+      type: INT
+    - name: mois
+      description: "Mois de la vente, en lettres"
+      type: VARCHAR
+    - name: jour
+      description: "Jour du mois en cours, en lettres"
+      type: VARCHAR

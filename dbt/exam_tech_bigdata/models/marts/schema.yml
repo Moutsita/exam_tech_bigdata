@@ -1,0 +1,37 @@
+# -- marts/obt_sales.yml --
+
+version: 2
+models:
+- name: obt_sales
+  description: "Table contenant toutes les informations nécessaires pour identifier une ligne de vente"
+  columns:
+  - name: id
+    description: "id de fact_ventes"
+  - name: annees
+  - name: mois
+  - name: jour
+  - name: pu
+  - name: qte
+  - name: id
+    description: "id de fact_factures"
+  - name: code
+  - name: qte_totale
+  - name: total_amount
+  - name: total_paid
+  - name: intitule
+  - name: code
+  - name: intitule
+  - name: isbn_10
+  - name: isbn_13
+  - name: code
+  - name: nom
+# exposures:
+# - name: resume_ventes
+#   type: dashboard
+#   maturity: high
+#   url: https://app.snowflake.com/
+#   depends_on: 
+#   - ref('obt_sales')
+#   owner:
+#   - name: myName
+#   email: myEmail

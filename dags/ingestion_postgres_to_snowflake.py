@@ -18,9 +18,9 @@ def transfer_table(table_name):
 
     # 2. Connexion Snowflake
     conn = snowflake.connector.connect(
-        user='Username',
-        password='votre_password_snowflake',
-        account='id.region.cloud',
+        user='Moutsita',
+        password='RovMoutsita@93',
+        account='cy02594.af-south-1.aws',
         warehouse='COMPUTE_WH',
         database='BOOKSHOP',
         schema='RAW'
@@ -65,3 +65,11 @@ with DAG(
             op_kwargs={'table_name': table}
         )
         tasks.append(task)
+        
+# Orchestration Airflow + DBT
+from airflow.operators.bash import BashOperator
+
+dbt_run = BashOperator(
+    task_id='run_dbt',
+    bash_command='cd /opt/airflow/dbt/exam_tech_bigdata && dbt run'
+)
