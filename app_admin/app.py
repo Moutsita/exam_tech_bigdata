@@ -1,12 +1,24 @@
 import streamlit as st
 import psycopg2
 import pandas as pd
+import subprocess
+import snowflake.connector
+from config import SNOWFLAKE_CONN
+import requests
 
-# Configuration
-st.set_page_config(page_title="Bookshop Admin", layout="wide", page_icon="📊")
+# ==============================
+# CONFIG PAGE
+# ==============================
+st.set_page_config(
+    page_title="Admin Bookshop - RAW",
+    layout="wide",
+    page_icon="⚙️"
+)
 
-# Connexion sécurisée au container postgres_source
-def get_connection():
+# ==============================
+# CONNEXIONS
+# ==============================
+def get_pg_connection():
     return psycopg2.connect(
         host="postgres_source",
         database="bookshop",
@@ -15,149 +27,239 @@ def get_connection():
         port="5432"
     )
 
-# --- MENU LATÉRAL ---
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2742/2742635.png", width=100)
-st.sidebar.title("Navigation")
-page = st.sidebar.selectbox("Choisir une table", ["Livres", "Clients", "Ventes", "Factures"])
+def get_snowflake_connection():
+    return snowflake.connector.connect(
+        user=SNOWFLAKE_CONN['user'],
+        password=SNOWFLAKE_CONN['password'],
+        account=SNOWFLAKE_CONN['account'],
+        warehouse=SNOWFLAKE_CONN['warehouse'],
+        database=SNOWFLAKE_CONN['database'],
+        schema='STAGGING_MARTS'
+    )
 
-# --- FONCTION POUR RÉCUPÉRER LES DONNÉES ---
+# ==============================
+# UTILS
+# ==============================
 def fetch_data(table_name):
-    conn = get_connection()
-    query = f"SELECT * FROM {table_name};"
-    df = pd.read_sql(query, conn)
+    conn = get_pg_connection()
+    df = pd.read_sql(f'SELECT * FROM raw."{table_name}" ORDER BY id DESC;', conn)
     conn.close()
     return df
 
-# --- PAGE LIVRES ---
-if page == "Livres":
-    st.title("📖 Gestion des Livres")
-    
-    # 1. Affichage des données existantes
-    st.subheader("Données actuelles dans PostgreSQL")
-    df_books = fetch_data("books")
-    st.dataframe(df_books, use_container_width=True)
+def fetch_snowflake():
+    try:
+        conn = get_snowflake_connection()
+        df = pd.read_sql("SELECT * FROM MARTS.obt_sales LIMIT 100", conn)
+        conn.close()
+        return df
+    except Exception as e:
+        st.error(f"Erreur Snowflake : {e}")
+        return pd.DataFrame()
 
-    # 2. Formulaire d'insertion
-    with st.expander("➕ Ajouter un nouveau livre"):
-        with st.form("form_livre"):
-            col1, col2 = st.columns(2)
-            new_id = col1.number_input("ID", step=1, value=int(df_books['id'].max() + 1) if not df_books.empty else 1)
-            title = col2.text_input("Titre du livre")
-            author = col1.text_input("Auteur")
-            price = col2.number_input("Prix", format="%.2f")
-            cat_id = st.number_input("ID Catégorie", step=1)
-            
-            if st.form_submit_button("Insérer dans Postgres"):
-                try:
-                    conn = get_connection()
-                    cur = conn.cursor()
-                    cur.execute("INSERT INTO books (id, title, author, price, category_id) VALUES (%s, %s, %s, %s, %s)",
-                                (new_id, title, author, price, cat_id))
-                    conn.commit()
-                    st.success(f"Livre '{title}' ajouté !")
-                    st.rerun() # Recharge la page pour voir le nouveau livre dans le tableau
-                except Exception as e:
-                    st.error(f"Erreur : {e}")
-
-# --- PAGE CLIENTS ---
-elif page == "Clients":
-    st.title("👥 Gestion des Clients")
-    df_clients = fetch_data("customers")
-    st.dataframe(df_clients, use_container_width=True)
+def get_options(query):
+    conn = get_pg_connection()
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
+#============================
+# Fonction de choix du dag
+#============================
+def trigger_dag(dag_id):
+    url = f"http://airflow_exam:8080/api/v1/dags/{dag_id}/dagRuns"
     
-    with st.expander("➕ Ajouter un client"):
-        with st.form("form_client"):
-            c_id = st.number_input("ID Client", step=1)
-            name = st.text_input("Nom complet")
-            email = st.text_input("Email")
+    response = requests.post(
+        url,
+        auth=("airflow", "airflow"),
+        json={}
+    )
+    return response.status_code, response.text
+# ==============================
+# SIDEBAR
+# ==============================
+st.sidebar.title("🛠️ Navigation")
+
+page = st.sidebar.selectbox("Choisir la table RAW",
+    ["category", "books", "customers", "factures", "ventes"]
+)
+
+view_mode = st.sidebar.radio(
+    "Mode",
+    ["RAW (Postgres)", "MARTS (Snowflake)"]
+)
+
+# ==============================
+# HEADER ACTIONS
+# ==============================
+st.title(f"Gestion : {page}")
+
+col1, col2, col3, col4 = st.columns([1, 3, 1, 1])
+
+with col1:
+    show_form = st.toggle("➕ Ajouter")
+
+with col2:
+    st.caption("Active pour insérer de nouvelles données")
+
+with col3:
+    if st.button("🔄 Refresh"):
+        st.rerun()
+
+with col4:
+    dag_choice = st.selectbox(
+        "DAG",
+        ["ingestion_bookshop", "pipeline_bookshop"],
+        label_visibility="collapsed"
+    )
+
+    if st.button("🚀 Lancer pipeline"):
+        status, text = trigger_dag(dag_choice)
+
+        if status in [200, 201]:
+            st.success(f"{dag_choice} lancé ✅")
+        else:
+            st.error(f"Erreur Airflow : {text}")
+# with col4:
+#     if st.button("🚀 Lancer pipeline"):
+#         try:
+#             subprocess.run(
+#                 ["airflow", "dags", "trigger", "ingestion_bookshop"],
+#                 check=True
+#             )
+#             st.success("Pipeline lancé ✅")
+#         except Exception as e:
+#             st.error(f"Erreur Airflow : {e}")
+
+# ==============================
+# FORMULAIRE
+# ==============================
+if show_form:
+
+    if st.button("🧹 Reset formulaire"):
+        st.rerun()
+
+    st.subheader(f"Insertion dans raw.{page}")
+
+    with st.form(f"form_{page}"):
+
+        if page == "category":
+            intitule = st.text_input("Intitulé *")
+
             if st.form_submit_button("Enregistrer"):
-                conn = get_connection()
-                cur = conn.cursor()
-                cur.execute("INSERT INTO customers (id, name, email) VALUES (%s, %s, %s)", (c_id, name, email))
-                conn.commit()
-                st.rerun()
+                if intitule:
+                    conn = get_pg_connection()
+                    cur = conn.cursor()
+                    cur.execute("INSERT INTO raw.category (intitule) VALUES (%s)", (intitule,))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    st.success("Ajout réussi ✅")
+                    st.rerun()
 
+        elif page == "books":
+            categories = get_options("SELECT id, intitule FROM raw.category")
 
+            cat_id = st.selectbox(
+                "Catégorie",
+                categories["id"],
+                format_func=lambda x: categories[categories["id"] == x]["intitule"].values[0]
+            )
 
+            code = st.text_input("Code *")
+            intitule = st.text_input("Intitulé *")
 
+            if st.form_submit_button("Enregistrer"):
+                if code and intitule:
+                    conn = get_pg_connection()
+                    cur = conn.cursor()
+                    cur.execute("""
+                        INSERT INTO raw.books (category_id, code, intitule)
+                        VALUES (%s, %s, %s)
+                    """, (cat_id, code, intitule))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    st.success("Livre ajouté ✅")
+                    st.rerun()
 
+        elif page == "customers":
+            code = st.text_input("Code *")
+            first = st.text_input("Prénom *")
+            last = st.text_input("Nom *")
 
+            if st.form_submit_button("Enregistrer"):
+                if code and first and last:
+                    conn = get_pg_connection()
+                    cur = conn.cursor()
+                    cur.execute("""
+                        INSERT INTO raw.customers (code, first_name, last_name)
+                        VALUES (%s, %s, %s)
+                    """, (code, first, last))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    st.success("Client ajouté ✅")
+                    st.rerun()
 
+        elif page == "factures":
+            customers = get_options("SELECT id, code FROM raw.customers")
 
+            code = st.text_input("Code *")
+            date_edit = st.text_input("Date (string) *")
 
+            cust_id = st.selectbox(
+                "Client",
+                customers["id"],
+                format_func=lambda x: customers[customers["id"] == x]["code"].values[0]
+            )
 
+            if st.form_submit_button("Enregistrer"):
+                if code and date_edit:
+                    conn = get_pg_connection()
+                    cur = conn.cursor()
+                    cur.execute("""
+                        INSERT INTO raw.factures (code, date_edit, customers_id)
+                        VALUES (%s, %s, %s)
+                    """, (code, date_edit, cust_id))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    st.success("Facture ajoutée ✅")
+                    st.rerun()
 
+        elif page == "ventes":
+            factures = get_options("SELECT id, code FROM raw.factures")
+            books = get_options("SELECT id, intitule FROM raw.books")
 
+            code = st.text_input("Code *")
+            date_edit = st.text_input("Date *")
 
+            fac_id = st.selectbox("Facture", factures["id"])
+            book_id = st.selectbox("Livre", books["id"])
 
+            if st.form_submit_button("Enregistrer"):
+                if code and date_edit:
+                    conn = get_pg_connection()
+                    cur = conn.cursor()
+                    cur.execute("""
+                        INSERT INTO raw.ventes (code, date_edit, factures_id, books_id)
+                        VALUES (%s, %s, %s, %s)
+                    """, (code, date_edit, fac_id, book_id))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    st.success("Vente ajoutée ✅")
+                    st.rerun()
 
+# ==============================
+# AFFICHAGE DATA
+# ==============================
+if view_mode == "RAW (Postgres)":
+    df = fetch_data(page)
+    st.subheader("📄 Données RAW")
+    st.dataframe(df, use_container_width=True)
 
-# ---------------------------------------------------------
+else:
+    df = fetch_snowflake()
+    st.subheader("📊 MARTS - obt_sales")
+    st.dataframe(df, use_container_width=True)
 
-
-# import streamlit as st
-# import psycopg2
-# from psycopg2 import sql
-
-# # Configuration de la page
-# st.set_page_config(page_title="Admin Bookshop - Insertion", layout="centered")
-
-# # 1. Fonction de connexion (à adapter avec tes accès Docker/Local)
-# def get_connection():
-#     return psycopg2.connect(
-#         host="postgres_source", # ou le nom du service si dans Docker
-#         database="bookshop",
-#         user="user",
-#         password="password",
-#         port="5432"
-#     )
-
-# st.title("📚 Bookshop Data Entry")
-# st.markdown("Insérez manuellement de nouveaux enregistrements dans PostgreSQL.")
-
-# # 2. Formulaire d'insertion pour la table BOOKS
-# with st.expander("Ajouter un nouveau Livre"):
-#     with st.form("form_books"):
-#         book_id = st.number_input("ID du livre", step=1)
-#         title = st.text_input("Titre du livre")
-#         author = st.text_input("Auteur")
-#         category_id = st.number_input("ID Catégorie", step=1)
-#         price = st.number_input("Prix", format="%.2f")
-        
-#         submitted = st.form_submit_button("Enregistrer le livre")
-        
-#         if submitted:
-#             try:
-#                 conn = get_connection()
-#                 cur = conn.cursor()
-#                 query = "INSERT INTO books (id, title, author, category_id, price) VALUES (%s, %s, %s, %s, %s)"
-#                 cur.execute(query, (book_id, title, author, category_id, price))
-#                 conn.commit()
-#                 st.success(f"Livre '{title}' ajouté avec succès !")
-#                 cur.close()
-#                 conn.close()
-#             except Exception as e:
-#                 st.error(f"Erreur : {e}")
-
-# # 3. Formulaire d'insertion pour la table VENTES
-# with st.expander("Enregistrer une Vente"):
-#     with st.form("form_sales"):
-#         sale_id = st.number_input("ID Vente", step=1)
-#         book_id_sale = st.number_input("ID Livre vendu", step=1)
-#         quantity = st.number_input("Quantité", min_value=1, step=1)
-#         sale_date = st.date_input("Date de vente")
-        
-#         submitted_sale = st.form_submit_button("Valider la vente")
-        
-#         if submitted_sale:
-#             try:
-#                 conn = get_connection()
-#                 cur = conn.cursor()
-#                 query = "INSERT INTO sales (id, book_id, quantity, sale_date) VALUES (%s, %s, %s, %s)"
-#                 cur.execute(query, (sale_id, book_id_sale, quantity, sale_date))
-#                 conn.commit()
-#                 st.success("Vente enregistrée !")
-#                 cur.close()
-#                 conn.close()
-#             except Exception as e:
-#                 st.error(f"Erreur : {e}")

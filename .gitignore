@@ -17,3 +17,4 @@ plugins/
 
 # Sécurisation compte snowflake
 dags/config.py
+app_admin/config.py

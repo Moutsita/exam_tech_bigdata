@@ -130,9 +130,10 @@ dbt docs serve
 ```
 
 ### 13. SNOWFLAKE_CONN
-Créer un fichier dans dags/config.py et insérer le script comme suit :
+Créer un fichier dans un fichier config.py et insérer le script comme suit :
 ```bash
 # dags/config.py
+# app_admin/config.py
 
 SNOWFLAKE_CONN = {
     'user': 'TON_UTILISATEUR',
@@ -145,4 +146,5 @@ SNOWFLAKE_CONN = {
 }
 ```
 Ensuite l'insérer dans le fichier gitignore
+
 N.B: Dans notre cas il est inséré, celà evite la fuite d'information personnelle et renforce la sécurité
