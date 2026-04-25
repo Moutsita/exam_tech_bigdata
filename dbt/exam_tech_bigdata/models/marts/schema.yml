@@ -5,33 +5,37 @@ models:
 - name: obt_sales
   description: "Table contenant toutes les informations nécessaires pour identifier une ligne de vente"
   columns:
-  - name: id
+  - name: vente_id
     description: "id de fact_ventes"
   - name: annees
   - name: mois
   - name: jour
   - name: pu
   - name: qte
-  - name: id
+  - name: facture_id
     description: "id de fact_factures"
-  - name: code
+  - name: facture_code
   - name: qte_totale
   - name: total_amount
   - name: total_paid
-  - name: intitule
-  - name: code
-  - name: intitule
+  - name: category_name
+  - name: book_code
+  - name: book_name
   - name: isbn_10
   - name: isbn_13
-  - name: code
+  - name: customer_code
   - name: nom
-# exposures:
-# - name: resume_ventes
-#   type: dashboard
-#   maturity: high
-#   url: https://app.snowflake.com/
-#   depends_on: 
-#   - ref('obt_sales')
-#   owner:
-#   - name: myName
-#   email: myEmail
+    description: "Nom complet du client"
+
+exposures:
+  - name: resume_ventes
+    type: dashboard
+    maturity: high
+    url: https://app.snowflake.com/
+    description: "Tableau de bord de suivi des performances de la boutique"
+    depends_on:
+      - ref('obt_sales')
+    owner:
+      name: "Moutsita"
+      email: "moutsitarovincy@gmail.com"
+

@@ -1,5 +1,5 @@
 services:
-  # Base SOURCE (Touche Personnelle)
+  # 1. Base SOURCE (Touche Personnelle)
   postgres_source:
     image: postgres:17
     container_name: postgres_bookshop
@@ -13,7 +13,7 @@ services:
     volumes:
       - ./init_db:/docker-entrypoint-initdb.d
 
-  # Base de métadonnées Airflow
+  # 2. Base de métadonnées Airflow
   postgres_airflow:
     image: postgres:15
     container_name: postgres_airflow
@@ -22,7 +22,7 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
 
-  # Airflow (L'orchestrateur)
+  # 3. Airflow (L'orchestrateur)
   airflow:
     build: .
     container_name: airflow_exam
@@ -38,3 +38,17 @@ services:
     ports:
       - "8080:8080"
     command: standalone
+
+  # 4. Application d'insertion streamlit dans la BD
+  admin-app:
+      build: .
+      container_name: streamlit_admin
+      entrypoint: [] # Pour annuler l'entrypoint de airflow
+      volumes:
+        - ./app_admin:/app
+      working_dir: /app
+      command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+      ports:
+        - "8501:8501"
+      depends_on:
+        - postgres_source # Pour s'assurer que la DB est lancée avant

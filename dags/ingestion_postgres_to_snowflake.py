@@ -3,6 +3,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 import snowflake.connector
+from config import SNOWFLAKE_CONN
 
 # Liste des tables à transférer
 TABLES = ['category', 'books', 'customers', 'factures', 'ventes']
@@ -18,12 +19,12 @@ def transfer_table(table_name):
 
     # 2. Connexion Snowflake
     conn = snowflake.connector.connect(
-        user='username',
-        password='pasword',
-        account='id.region.cloud',
-        warehouse='COMPUTE_WH',
-        database='BOOKSHOP',
-        schema='RAW'
+        user=SNOWFLAKE_CONN['user'],
+        password=SNOWFLAKE_CONN['password'],
+        account=SNOWFLAKE_CONN['account'],
+        warehouse=SNOWFLAKE_CONN['warehouse'],
+        database=SNOWFLAKE_CONN['database'],
+        schema=SNOWFLAKE_CONN['schema']
     )
     cursor = conn.cursor()
 
@@ -65,11 +66,3 @@ with DAG(
             op_kwargs={'table_name': table}
         )
         tasks.append(task)
-        
-# Orchestration Airflow + DBT
-from airflow.operators.bash import BashOperator
-
-dbt_run = BashOperator(
-    task_id='run_dbt',
-    bash_command='cd /opt/airflow/dbt/exam_tech_bigdata && dbt run'
-)

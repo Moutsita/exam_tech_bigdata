@@ -9,11 +9,11 @@ models:
       description: "Clé primaire"
       tests:
       - unique
-      - not null
+      - not_null
     - name: category_id
       description: "Clé étrangère référence id de la table category"
       tests:
-      - not null
+      - not_null
     - name: code
     - name: intitule
     - name: isbn_10
@@ -26,7 +26,7 @@ models:
     - name: id
       description: "Clé primaire"
       tests:
-      - not null
+      - not_null
       - unique
     - name: intitule
     - name: created_at
@@ -38,7 +38,7 @@ models:
       description: "Clé primaire de la table"
       tests:
       - unique
-      - not null
+      - not_null
     - name: code
     - name: first_name
     - name: last_name
@@ -51,18 +51,11 @@ models:
     columns:
     - name: id
       description: "Clé primaire de la table des ventes"
-      tests:
-      - not null
-      - unique
     # - name: date_edit
     - name: factures_id
       description: "Clé étrangère référence id de factures"
-      tests:
-      - not null
     - name: books_id
       description: "Clé étrangère reférence id de books"
-      tests:
-      - not null
     - name: pu
     - name: qte
     - name: created_at
@@ -74,18 +67,11 @@ models:
     columns:
     - name: id
       description: "Clé primaire de la table des ventes"
-      tests:
-      - not null
-      - unique
     # - name: date_edit
     - name: factures_id
       description: "Clé étrangère référence id de factures"
-      tests:
-      - not null
     - name: books_id
       description: "Clé étrangère reférence id de books"
-      tests:
-      - not null
     - name: pu
     - name: qte
     - name: created_at
@@ -97,18 +83,11 @@ models:
     columns:
     - name: id
       description: "Clé primaire de la table des ventes"
-      tests:
-      - not null
-      - unique
     # - name: date_edit
     - name: factures_id
       description: "Clé étrangère référence id de factures"
-      tests:
-      - not null
     - name: books_id
       description: "Clé étrangère reférence id de books"
-      tests:
-      - not null
     - name: pu
     - name: qte
     - name: created_at
@@ -121,14 +100,14 @@ models:
     - name: id
       description: "Clé primaire"
       tests:
-      - not null
+      - not_null
       - unique
     - name: code
     - name: date_edit
     - name: customers_id
       description: "Clé étrangère référence id de customers"
       tests:
-      - not null
+      - not_null
     - name: qte_totale
     - name: total_amount
     - name: total_paid
@@ -149,17 +128,17 @@ models:
     - name: id
       description: "Clé primaire de la table des ventes"
       tests:
-      - not null
+      - not_null
       - unique
     - name: date_edit
     - name: factures_id
       description: "Clé étrangère référence id de factures"
       tests:
-      - not null
+      - not_null
     - name: books_id
       description: "Clé étrangère reférence id de books"
       tests:
-      - not null
+      - not_null
     - name: pu
     - name: qte
     - name: created_at

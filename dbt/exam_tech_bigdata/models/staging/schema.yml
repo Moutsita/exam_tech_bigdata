@@ -50,7 +50,7 @@ models:
     description: "Clé primaire de la table"
     tests:
     - unique
-    - not null
+    - not_null
   - name: code
   - name: first_name
   - name: last_name

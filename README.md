@@ -23,7 +23,7 @@ docker-compose down
 docker logs airflow_exam | Select-String "login"
 ```
 
-### 6. Initialistion de dbt et cr&ation des dépôts
+### 6. Initialistion de dbt et création des dépôts
 ``` bash
 docker exec -it airflow_exam bash -c "cd /opt/airflow/dbt && dbt init exam_tech_bigdata"
 ```
@@ -81,4 +81,68 @@ docker exec -u root airflow_exam mv /opt/airflow/dbt/profiles.yml /home/airflow/
 docker exec -u root airflow_exam chown airflow:airflow /home/airflow/.dbt/profiles.yml
 ```
 
-### 10. 
+### 10. Redémarrage du projet après un arrêt
+Si vous avez effectué un "docker compose down"; pour revenir à votre projet et recréer le fichier profiles.yml, suivre les étapes suivantes :
+```bash
+docker exec -it airflow_exam bash
+
+cd /opt/airflow/dbt/exam_tech_bigdata
+
+mkdir -p ~/.dbt/ && cat << EOF > ~/.dbt/profiles.yml
+exam_tech_bigdata:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: [ton_id_snowflake]
+      user: [ton_utilisateur]
+      password: [ton_mot_de_passe]
+      role: ACCOUNTADMIN
+      database: BOOKSHOP
+      warehouse: COMPUTE_WH
+      schema: STAGGING
+      threads: 4
+EOF
+```
+Une fois exécutée, verifier la présence du script crée
+```bash
+cat ~/.dbt/profiles.yaml
+```
+Par la suite, vous pouvez lancer le débuggage de dbt
+```bash
+dbt debug
+```
+N.B: Le fichier profiles.yml étant éphémère, chaque fois que nous exécutons "docker compose down", il disparait aussi, c'est pourquoi afin 
+
+### 11. Construction du projet et test final
+```bash
+dbt run # pour le test de verification du projet
+
+dbt test # pour le test final
+
+dbt clean # pour le nettoyage de tous les résidus
+```
+
+### 12. Visualisation du pipeline
+```bash
+dbt docs generate
+dbt docs serve
+```
+
+### 13. SNOWFLAKE_CONN
+Créer un fichier dans dags/config.py et insérer le script comme suit :
+```bash
+# dags/config.py
+
+SNOWFLAKE_CONN = {
+    'user': 'TON_UTILISATEUR',
+    'password': 'TON_MOT_DE_PASSE',
+    'account': 'TON_COMPTE_SNOWFLAKE',
+    'warehouse': 'COMPUTE_WH',
+    'database': 'BOOKSHOP_DB',
+    'schema': 'PUBLIC',
+    'role': 'ACCOUNTADMIN'
+}
+```
+Ensuite l'insérer dans le fichier gitignore
+N.B: Dans notre cas il est inséré, celà evite la fuite d'information personnelle et renforce la sécurité
