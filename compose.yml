@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - ./init_db:/docker-entrypoint-initdb.d
+      # - postgres_data:/var/lib/postgresql/data # Stockage réel des tables SQL
 
   # 2. Base de métadonnées Airflow
   postgres_airflow:
@@ -30,14 +31,30 @@ services:
       - postgres_airflow
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
+      # - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
+
+      # Création d'un utilisateur admin fixe
+      - _AIRFLOW_WWW_USER_USERNAME=admin
+      - _AIRFLOW_WWW_USER_PASSWORD=admin123
+      - _AIRFLOW_WWW_USER_FIRSTNAME=Admin
+      - _AIRFLOW_WWW_USER_LASTNAME=User
+      - _AIRFLOW_WWW_USER_EMAIL=admin@example.com
     volumes:
       - ./dags:/opt/airflow/dags
       - ./dbt:/opt/airflow/dbt
+      # - airflow_logs:/opt/airflow/logs # Stockage des logs des DAGs
     ports:
-      - "8080:8080"
-    command: standalone
+      - "8080:8080" # Pour l'interface Airflow
+      - "8081:8081" # Pour la doc dbt
+    # command: standalone
+    command: >
+      bash -c "
+      airflow db migrate;
+      airflow users create --username admin --password admin123 --firstname Admin --lastname User --role Admin --email admin@example.com;
+      airflow webserver & airflow scheduler;
+      "
 
   # 4. Application d'insertion streamlit dans la BD
   admin-app:
@@ -52,3 +69,10 @@ services:
         - "8501:8501"
       depends_on:
         - postgres_source # Pour s'assurer que la DB est lancée avant
+
+# ==========================================================
+# DÉFINITION DES VOLUMES NOMMÉS (Persistance longue durée)
+# ==========================================================
+# volumes:
+#   postgres_data:
+#   airflow_logs: 

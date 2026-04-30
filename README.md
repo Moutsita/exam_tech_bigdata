@@ -18,12 +18,12 @@ docker-compose up -d --build
 docker-compose down
 ```
 
-### 5. Accéder au password de Airflow
+<!-- ### 5. Accéder au password de Airflow
 ``` bash
 docker logs airflow_exam | Select-String "login"
-```
+``` -->
 
-### 6. Initialistion de dbt et création des dépôts
+### 5. Initialistion de dbt et création des dépôts
 ``` bash
 docker exec -it airflow_exam bash -c "cd /opt/airflow/dbt && dbt init exam_tech_bigdata"
 ```
@@ -44,7 +44,7 @@ Celle ci permet de vérifier si la configuration est OK
 Le fichier profiles.yml est uniquement généré dans le container, pour des raisons de sécurité.
 
 
-### 7. Configuration du fichier ingestion_postres_to_snowflake
+### 6. Configuration du fichier ingestion_postres_to_snowflake
 Remplacer les données du connecteur snowflake par celle du profiles.yml
 
 NB : Attention, pour account la syntaxe est : 
@@ -52,10 +52,10 @@ NB : Attention, pour account la syntaxe est :
 <identifiant>.<region>.<cloud>
 ```
 
-### 8. Configuration de Airflow en localhost:<port>
+### 7. Configuration de Airflow en localhost:<port>
 Ici notre port de communication du container est 8080; Voici les configurations une fois à l'intérieur :
 - Clique sur Admin ensuite connections
-- Recherche postgres_default et insère les valeurs suivantes (elles sont relatives à notre container) :
+- Recherche postgres_default (ou créer un une nouvelle connection) et insère les valeurs suivantes (elles sont relatives à notre container) :
 
 ``` bash
 -- - Conn Id: postgres_default
@@ -68,7 +68,7 @@ Ici notre port de communication du container est 8080; Voici les configurations 
 ```
 - Vous pouvez à présent lancer le dag d'ingestion
 
-### 9. Vérification du fonctionnement de dbt
+<!-- ### 9. Vérification du fonctionnement de dbt (Ne pas exécuter le script de ce point 9)
 a. Créer les dossier manquant dans le container
 
 ```bash
@@ -79,9 +79,9 @@ b. Déplacer le fichier au bon endroit
 docker exec -u root airflow_exam mv /opt/airflow/dbt/profiles.yml /home/airflow/.dbt/profiles.yml
 
 docker exec -u root airflow_exam chown airflow:airflow /home/airflow/.dbt/profiles.yml
-```
+``` -->
 
-### 10. Redémarrage du projet après un arrêt
+### 8. Redémarrage du projet après un arrêt
 Si vous avez effectué un "docker compose down"; pour revenir à votre projet et recréer le fichier profiles.yml, suivre les étapes suivantes :
 ```bash
 docker exec -it airflow_exam bash
@@ -106,7 +106,7 @@ EOF
 ```
 Une fois exécutée, verifier la présence du script crée
 ```bash
-cat ~/.dbt/profiles.yaml
+cat ~/.dbt/profiles.yml
 ```
 Par la suite, vous pouvez lancer le débuggage de dbt
 ```bash
@@ -114,7 +114,7 @@ dbt debug
 ```
 N.B: Le fichier profiles.yml étant éphémère, chaque fois que nous exécutons "docker compose down", il disparait aussi, c'est pourquoi afin 
 
-### 11. Construction du projet et test final
+### 9. Construction du projet et test final
 ```bash
 dbt run # pour le test de verification du projet
 
@@ -123,13 +123,19 @@ dbt test # pour le test final
 dbt clean # pour le nettoyage de tous les résidus
 ```
 
-### 12. Visualisation du pipeline
+### 10. Visualisation du pipeline
 ```bash
 dbt docs generate
-dbt docs serve
+dbt docs serve --port 8081 --host 0.0.0.0
 ```
+Après celà, vous pouvez accéder à dbt en local via le l'url suivante:
+```bash
+http://www.localhost:8081
+```
+Vous pouvez visualiser notre dashboard PowerBI en cliquant sur le dossier "models/marts/obt_sales.sql" et en cliquant sur "view exposure"
+Remarque: Seules les personnes ayant été ajoutées pour visualiser notre dashboard peuvent y accéder
 
-### 13. SNOWFLAKE_CONN
+### 11. SNOWFLAKE_CONN
 Créer un fichier dans un fichier config.py et insérer le script comme suit :
 ```bash
 # dags/config.py

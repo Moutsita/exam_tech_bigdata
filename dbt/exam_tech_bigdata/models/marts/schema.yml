@@ -31,7 +31,8 @@ exposures:
   - name: resume_ventes
     type: dashboard
     maturity: high
-    url: https://app.snowflake.com/
+    # url: https://app.snowflake.com/
+    url: https://app.powerbi.com/links/I-dJDl3x0r?ctid=c1a7f8a0-d9be-49fe-9f8a-14fa9ced67d6&pbi_source=linkShare
     description: "Tableau de bord de suivi des performances de la boutique"
     depends_on:
       - ref('obt_sales')
